@@ -27,11 +27,9 @@ interface PlacementFormState {
 const PRESET_MODELS: Record<Provider, Array<{ value: string; label: string }>> = {
   anthropic: [
     { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fast · cheap)' },
-    { value: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6 (balanced)' },
   ],
   openai: [
-    { value: 'gpt-4o-mini', label: 'GPT-4o mini (fast · cheap)' },
-    { value: 'gpt-4o',      label: 'GPT-4o (capable)' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o mini (fast · cheap)' }
   ],
   ollama: [
     { value: 'llama3.1',     label: 'llama3.1 (recommended)' },
