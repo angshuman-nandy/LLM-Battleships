@@ -26,6 +26,7 @@ from .session_store import (
     enqueue_event,
     get_game,
     get_human_event,
+    get_pause_event,
     get_placement_event,
     set_game,
 )
@@ -289,6 +290,11 @@ class GameEngine:
                 continue
 
             # ── LLM turn ─────────────────────────────────────────────
+            # Block here if the game has been paused.
+            pause_event = get_pause_event(self._game_id)
+            if pause_event is not None:
+                await pause_event.wait()
+
             try:
                 llm = LLMWrapperFactory.create(current_player.llm_config)
                 system_prompt = shot_system_for_player(role_value)

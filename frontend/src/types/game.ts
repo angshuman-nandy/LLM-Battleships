@@ -94,6 +94,7 @@ export interface GameStatusResponse {
   current_turn: PlayerRole
   moves: Move[]
   winner?: PlayerRole
+  paused: boolean
 }
 
 // ── SSE events ───────────────────────────────────────────────────────────────

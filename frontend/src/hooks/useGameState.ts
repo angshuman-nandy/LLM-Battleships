@@ -340,6 +340,27 @@ function reducer(state: State, action: Action): State {
           }
         }
 
+        // ── game_paused / game_resumed ───────────────────────────────────────
+        case 'game_paused': {
+          const id = base.logIdCounter + 1
+          return {
+            ...base,
+            game: base.game ? { ...base.game, paused: true } : null,
+            logIdCounter: id,
+            log: [...base.log, makeEntry(id, eventType, 'Game paused.')],
+          }
+        }
+
+        case 'game_resumed': {
+          const id = base.logIdCounter + 1
+          return {
+            ...base,
+            game: base.game ? { ...base.game, paused: false } : null,
+            logIdCounter: id,
+            log: [...base.log, makeEntry(id, eventType, 'Game resumed.')],
+          }
+        }
+
         // ── error ────────────────────────────────────────────────────────────
         case 'error': {
           const message =

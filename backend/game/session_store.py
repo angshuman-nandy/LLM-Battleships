@@ -8,6 +8,7 @@ _games: dict[str, GameState] = {}
 _queues: dict[str, asyncio.Queue] = {}
 _human_events: dict[str, asyncio.Event] = {}
 _placement_events: dict[str, dict[str, asyncio.Event]] = {}
+_pause_events: dict[str, asyncio.Event] = {}
 _tasks: dict[str, asyncio.Task] = {}
 
 
@@ -20,6 +21,9 @@ def create_session(game_id: str, game: GameState) -> None:
         PlayerRole.player1.value: asyncio.Event(),
         PlayerRole.player2.value: asyncio.Event(),
     }
+    pause_event = asyncio.Event()
+    pause_event.set()  # set = running; clear = paused
+    _pause_events[game_id] = pause_event
     # Background task is registered separately via set_task().
 
 
@@ -64,6 +68,15 @@ def get_placement_event(game_id: str, player: str) -> Optional[asyncio.Event]:
     return session_events.get(player)
 
 
+def get_pause_event(game_id: str) -> Optional[asyncio.Event]:
+    """Return the pause asyncio.Event for *game_id*.
+
+    Convention: event SET means running; event CLEAR means paused.
+    The engine awaits this event before each LLM turn.
+    """
+    return _pause_events.get(game_id)
+
+
 def set_task(game_id: str, task: asyncio.Task) -> None:
     """Register the background game-loop task so it can be cancelled on deletion."""
     _tasks[game_id] = task
@@ -79,6 +92,7 @@ def delete_session(game_id: str) -> None:
     _queues.pop(game_id, None)
     _human_events.pop(game_id, None)
     _placement_events.pop(game_id, None)
+    _pause_events.pop(game_id, None)
 
 
 def list_game_ids() -> list[str]:

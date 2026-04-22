@@ -33,7 +33,7 @@ const PROVIDER_LABELS: Record<Provider, string> = {
   ollama: 'Ollama (local)',
 }
 
-const BOARD_SIZES = [5, 7, 10, 12, 15]
+const BOARD_SIZES = [5, 7, 10]
 
 // ── Shared inline styles ──────────────────────────────────────────────────────
 

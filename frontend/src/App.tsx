@@ -43,6 +43,9 @@ export default function App() {
   const [placementConfirmed, setPlacementConfirmed] = useState(false)
   const [humanRole] = useState<PlayerRole>('player1')
   const [fireError, setFireError] = useState<string | null>(null)
+  const [logCollapsed, setLogCollapsed] = useState(false)
+  const [paused, setPaused] = useState(false)
+  const [pauseLoading, setPauseLoading] = useState(false)
 
   const { game, isConnected, log, lastFiredCell, handleEvent, setGame, reset } = useGameState()
 
@@ -57,6 +60,9 @@ export default function App() {
 
       // Re-fetch full state when boards first become populated (placement done)
       // or when a ship sinks (need all sunk cells, not just the fired one).
+      if (type === 'game_paused') setPaused(true)
+      if (type === 'game_resumed') setPaused(false)
+
       if (
         type === 'all_placements_done' ||
         (type === 'shot_fired' && data.result === 'sunk') ||
@@ -131,6 +137,41 @@ export default function App() {
     [gameId],
   )
 
+  const handlePauseResume = useCallback(async () => {
+    if (!gameId) return
+    setPauseLoading(true)
+    try {
+      if (paused) {
+        await api.resumeGame(gameId)
+        setPaused(false)
+      } else {
+        await api.pauseGame(gameId)
+        setPaused(true)
+      }
+    } catch {
+      // Ignore — SSE will reflect the actual state
+    } finally {
+      setPauseLoading(false)
+    }
+  }, [gameId, paused])
+
+  const handleStopGame = useCallback(async () => {
+    if (!gameId) return
+    try {
+      await api.deleteGame(gameId)
+    } catch {
+      // Already gone is fine
+    }
+    setGameId(null)
+    setGameStarted(false)
+    setShowSetup(true)
+    setNeedsHumanPlacement(false)
+    setPlacementConfirmed(false)
+    setFireError(null)
+    setPaused(false)
+    reset()
+  }, [gameId, reset])
+
   const handleNewGame = useCallback(async () => {
     if (gameId) {
       try {
@@ -145,6 +186,7 @@ export default function App() {
     setNeedsHumanPlacement(false)
     setPlacementConfirmed(false)
     setFireError(null)
+    setPaused(false)
     reset()
   }, [gameId, reset])
 
@@ -183,20 +225,58 @@ export default function App() {
         </h1>
 
         {gameStarted && (
-          <button
-            onClick={handleNewGame}
-            style={{
-              padding: '8px 16px',
-              cursor: 'pointer',
-              backgroundColor: '#2a1a1a',
-              color: '#f88',
-              border: '1px solid #833',
-              borderRadius: 6,
-              fontSize: 13,
-            }}
-          >
-            New Game
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {/* Pause / Resume — only meaningful for LLM turns in-progress */}
+            {game?.phase === 'in_progress' && game.mode === 'llm_vs_llm' && (
+              <button
+                onClick={handlePauseResume}
+                disabled={pauseLoading}
+                style={{
+                  padding: '8px 16px',
+                  cursor: pauseLoading ? 'wait' : 'pointer',
+                  backgroundColor: paused ? '#1a3a1a' : '#2a2a1a',
+                  color: paused ? '#4caf50' : '#fbbf24',
+                  border: `1px solid ${paused ? '#4caf50' : '#92400e'}`,
+                  borderRadius: 6,
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                {paused ? '▶ Resume' : '⏸ Pause'}
+              </button>
+            )}
+
+            {/* Stop — ends and discards the current game */}
+            <button
+              onClick={handleStopGame}
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                backgroundColor: '#2a1a1a',
+                color: '#f88',
+                border: '1px solid #833',
+                borderRadius: 6,
+                fontSize: 13,
+              }}
+            >
+              ⏹ Stop
+            </button>
+
+            <button
+              onClick={handleNewGame}
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                backgroundColor: '#1a1a2a',
+                color: '#aaa',
+                border: '1px solid #444',
+                borderRadius: 6,
+                fontSize: 13,
+              }}
+            >
+              New Game
+            </button>
+          </div>
         )}
       </div>
 
@@ -275,10 +355,33 @@ export default function App() {
 
           {/* Move log */}
           <div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 15, color: '#aaa' }}>
-              Event Log
-            </h3>
-            <MoveLog entries={log} />
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: logCollapsed ? 0 : 8,
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: 15, color: '#aaa' }}>
+                Event Log {log.length > 0 && <span style={{ color: '#666', fontWeight: 400 }}>({log.length})</span>}
+              </h3>
+              <button
+                onClick={() => setLogCollapsed((c) => !c)}
+                style={{
+                  background: 'none',
+                  border: '1px solid #444',
+                  borderRadius: 4,
+                  color: '#888',
+                  fontSize: 12,
+                  padding: '2px 10px',
+                  cursor: 'pointer',
+                }}
+              >
+                {logCollapsed ? 'Show' : 'Hide'}
+              </button>
+            </div>
+            {!logCollapsed && <MoveLog entries={log} />}
           </div>
         </div>
       )}

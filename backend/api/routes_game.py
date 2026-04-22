@@ -46,6 +46,7 @@ from ..game.session_store import (
     enqueue_event,
     get_game,
     get_human_event,
+    get_pause_event,
     get_placement_event,
     set_game,
     set_task,
@@ -375,6 +376,50 @@ async def get_state(game_id: str) -> GameStatusResponse:
     if game.mode == GameMode.human_vs_llm:
         return GameStatusResponse.from_game_state(game, requesting_role=PlayerRole.player1)
     return GameStatusResponse.from_game_state(game, requesting_role=None)
+
+
+# ---------------------------------------------------------------------------
+# POST /api/game/{game_id}/pause  &  /resume
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{game_id}/pause")
+async def pause_game(game_id: str) -> dict[str, str]:
+    """Pause an in-progress LLM game. The engine will stop before the next LLM turn."""
+    game = get_game_or_404(game_id)
+    if game.phase != GamePhase.in_progress:
+        raise HTTPException(status_code=400, detail="Game is not in progress.")
+    if game.paused:
+        raise HTTPException(status_code=400, detail="Game is already paused.")
+
+    pause_event = get_pause_event(game_id)
+    if pause_event is not None:
+        pause_event.clear()  # clear = paused
+
+    game.paused = True
+    set_game(game_id, game)
+    await enqueue_event(game_id, "game_paused", {"timestamp": _now()})
+    return {"status": "paused"}
+
+
+@router.post("/{game_id}/resume")
+async def resume_game(game_id: str) -> dict[str, str]:
+    """Resume a paused game."""
+    game = get_game_or_404(game_id)
+    if game.phase != GamePhase.in_progress:
+        raise HTTPException(status_code=400, detail="Game is not in progress.")
+    if not game.paused:
+        raise HTTPException(status_code=400, detail="Game is not paused.")
+
+    game.paused = False
+    set_game(game_id, game)
+
+    pause_event = get_pause_event(game_id)
+    if pause_event is not None:
+        pause_event.set()  # set = running
+
+    await enqueue_event(game_id, "game_resumed", {"timestamp": _now()})
+    return {"status": "resumed"}
 
 
 # ---------------------------------------------------------------------------

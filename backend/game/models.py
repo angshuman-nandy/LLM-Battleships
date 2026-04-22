@@ -136,6 +136,7 @@ class GameState(BaseModel):
     current_turn: PlayerRole = PlayerRole.player1
     moves: list[Move] = Field(default_factory=list)
     winner: Optional[PlayerRole] = None
+    paused: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -253,6 +254,7 @@ class GameStatusResponse(BaseModel):
     current_turn: PlayerRole
     moves: list[Move] = Field(default_factory=list)
     winner: Optional[PlayerRole] = None
+    paused: bool = False
 
     @classmethod
     def from_game_state(
@@ -288,4 +290,5 @@ class GameStatusResponse(BaseModel):
             current_turn=state.current_turn,
             moves=state.moves,
             winner=state.winner,
+            paused=state.paused,
         )

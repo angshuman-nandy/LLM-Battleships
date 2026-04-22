@@ -3,16 +3,27 @@ import type { GameStatusResponse, PlayerRole, CellState } from '../types/game'
 import type { FiredCell } from '../hooks/useGameState'
 import { GameBoard } from './GameBoard'
 
-function useCellSize(): number {
+function useBoardLayout(boardSize: number): { cellSize: number; isMobile: boolean } {
   const [width, setWidth] = useState(window.innerWidth)
   useEffect(() => {
     const handler = () => setWidth(window.innerWidth)
     window.addEventListener('resize', handler)
     return () => window.removeEventListener('resize', handler)
   }, [])
-  if (width <= 400) return 20
-  if (width <= 600) return 24
-  return 32
+
+  const isMobile = width <= 640
+
+  // On mobile boards are stacked — one board fills most of the viewport width.
+  // On desktop they sit side-by-side with a gap, so each gets ~half the width.
+  const available = isMobile
+    ? width - 60              // full width minus padding
+    : (width - 120) / 2      // half width minus padding + gap
+
+  // available ≈ coordLabel(24) + boardSize * cellSize  →  solve for cellSize
+  const computed = Math.floor((available - 24) / boardSize)
+  const cellSize = Math.max(16, Math.min(32, computed))
+
+  return { cellSize, isMobile }
 }
 
 interface BoardPairProps {
@@ -38,7 +49,7 @@ function playerLabel(game: GameStatusResponse, role: PlayerRole): string {
 
 export function BoardPair({ game, onFire, humanRole, lastFiredCell }: BoardPairProps) {
   const size = game.board_size
-  const cellSize = useCellSize()
+  const { cellSize, isMobile } = useBoardLayout(size)
   const isHumanTurn =
     game.phase === 'in_progress' && humanRole !== undefined && game.current_turn === humanRole
 
@@ -51,13 +62,21 @@ export function BoardPair({ game, onFire, humanRole, lastFiredCell }: BoardPairP
     return { row: lastFiredCell.row, col: lastFiredCell.col, key: lastFiredCell.key }
   }
 
+  const wrapStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
+    alignItems: isMobile ? 'center' : 'flex-start',
+    gap: isMobile ? 20 : 24,
+    justifyContent: 'center',
+  }
+
   // ── LLM vs LLM: show both boards, no click handlers ─────────────────────
   if (game.mode === 'llm_vs_llm') {
     const p1Grid = game.player1.board?.grid ?? emptyGrid(size)
     const p2Grid = game.player2.board?.grid ?? emptyGrid(size)
 
     return (
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={wrapStyle}>
         <GameBoard grid={p1Grid} label={playerLabel(game, 'player1')} size={size} cellSize={cellSize} firingCell={firingCellFor('player1')} />
         <GameBoard grid={p2Grid} label={playerLabel(game, 'player2')} size={size} cellSize={cellSize} firingCell={firingCellFor('player2')} />
       </div>
@@ -74,7 +93,7 @@ export function BoardPair({ game, onFire, humanRole, lastFiredCell }: BoardPairP
       : undefined
 
   return (
-    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+    <div style={wrapStyle}>
       <div>
         <GameBoard
           grid={ownGrid}

@@ -114,6 +114,20 @@ export const api = {
     del(`/game/${gameId}`),
 
   /**
+   * POST /api/game/{id}/pause
+   * Pauses an in-progress LLM game between turns.
+   */
+  pauseGame: (gameId: string): Promise<{ status: string }> =>
+    post(`/game/${gameId}/pause`),
+
+  /**
+   * POST /api/game/{id}/resume
+   * Resumes a paused game.
+   */
+  resumeGame: (gameId: string): Promise<{ status: string }> =>
+    post(`/game/${gameId}/resume`),
+
+  /**
    * GET /api/config
    * Returns server-side defaults (from .env) to pre-fill the setup form.
    * available_providers lists providers with configured keys (+ ollama always).
