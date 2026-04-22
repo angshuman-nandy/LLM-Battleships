@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import { useState, useCallback, useEffect } from 'react'
 import { SetupPanel } from './components/SetupPanel'
 import { BoardPair } from './components/BoardPair'

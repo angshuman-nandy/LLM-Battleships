@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 """
 routes_sse.py — Server-Sent Events streaming endpoint for LLM Battleships.
 

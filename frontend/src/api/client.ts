@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import type { GameStatusResponse, PlacedShip } from '../types/game'
 
 const BASE = '/api'

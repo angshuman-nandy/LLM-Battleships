@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import { useState, useEffect } from 'react'
 import type { Provider, GameMode, PlacementMode } from '../types/game'
 import { api } from '../api/client'

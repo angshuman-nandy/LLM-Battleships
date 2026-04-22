@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import type { GameStatusResponse, PlayerRole } from '../types/game'
 
 interface StatusBarProps {

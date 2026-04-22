@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 """
 deps.py — FastAPI dependencies shared across route modules.
 """

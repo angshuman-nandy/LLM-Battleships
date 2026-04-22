@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 """
 engine.py — Core game engine for LLM Battleships.
 

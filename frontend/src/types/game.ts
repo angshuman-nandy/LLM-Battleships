@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 // TypeScript mirrors of the backend Pydantic models.
 // Use string literal union types throughout — no enums.
 

@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import { useEffect, useRef } from 'react'
 import type { LogEntry } from '../hooks/useGameState'
 

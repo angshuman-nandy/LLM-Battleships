@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 from __future__ import annotations
 
 import logging

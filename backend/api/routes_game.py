@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 """
 routes_game.py — REST endpoints for LLM Battleships game management.
 

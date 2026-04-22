@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import { useState, useCallback } from 'react'
 import type { PlacedShip, CellState } from '../types/game'
 

@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 """
 main.py — FastAPI application entry point for LLM Battleships.
 

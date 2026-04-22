@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2026 Angshuman Nandy
+
 """
 board.py — Grid logic and ship placement validation for LLM Battleships.
 

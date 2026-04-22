@@ -1,3 +1,6 @@
+// MIT License
+// Copyright (c) 2026 Angshuman Nandy
+
 import { useEffect, useState } from 'react'
 import type { GameStatusResponse, PlayerRole, CellState } from '../types/game'
 import type { FiredCell } from '../hooks/useGameState'
