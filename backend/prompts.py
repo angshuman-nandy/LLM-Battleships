@@ -47,7 +47,9 @@ def placement_user_message(board_size: int, ships_to_place: list[tuple[str, int]
 # ── Shooting ─────────────────────────────────────────────────────────────────
 
 SHOT_SYSTEM = (
-    "You are playing Battleship. Fire strategically: track hit patterns to find "
+    "You are playing Battleship. CRITICAL RULE: never fire at a cell you have already "
+    "fired at — always check the ALREADY FIRED list in the prompt and the enemy board "
+    "view before choosing a cell. Fire strategically: track hit patterns to find "
     "ship orientations, eliminate impossible positions, and prioritise finishing "
     "damaged ships before searching new areas."
 )
@@ -56,8 +58,10 @@ SHOT_SYSTEM = (
 def shot_system_for_player(player_role: str) -> str:
     return (
         f"You are playing Battleship as {player_role}. "
+        "CRITICAL RULE: never fire at a cell you have already fired at — always check the "
+        "ALREADY FIRED list in the prompt and the enemy board view before choosing a cell. "
         "Fire strategically: follow up on hits to sink ships quickly, "
-        "use checkerboard patterns to find new ships, and avoid cells you've already fired at."
+        "use checkerboard patterns to find new ships."
     )
 
 

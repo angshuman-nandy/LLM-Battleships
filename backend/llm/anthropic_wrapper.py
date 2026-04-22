@@ -22,7 +22,6 @@ from ..prompts import (
     SHOT_SYSTEM,
     format_move_history,
     placement_user_message,
-    shot_retry_message,
     shot_user_message,
 )
 
@@ -140,9 +139,6 @@ class AnthropicWrapper(LLMWrapper):
         last_exc: Exception | None = None
 
         for attempt in range(1, 4):
-            if attempt > 1:
-                messages.append({"role": "user", "content": shot_retry_message(attempt - 1, board_size, last_exc)})
-
             try:
                 response = await self._client.messages.create(
                     model=self._config.model,
@@ -164,6 +160,13 @@ class AnthropicWrapper(LLMWrapper):
             row: int = int(tool_input["row"])
             col: int = int(tool_input["col"])
             reasoning: str | None = tool_input.get("reasoning")
+
+            # Find the tool_use block id for building the tool_result on retry.
+            tool_use_id: str | None = None
+            for block in response.content:
+                if block.type == "tool_use":
+                    tool_use_id = block.id
+                    break
 
             # Validate bounds and that the cell hasn't already been fired at.
             if not (0 <= row < board_size and 0 <= col < board_size):
@@ -187,6 +190,7 @@ class AnthropicWrapper(LLMWrapper):
                     reasoning,
                 )
                 return ShotResult(row=row, col=col, reasoning=reasoning)
+
             logger.warning(
                 "choose_shot: invalid coordinate from model=%s attempt=%d "
                 "row=%d col=%d board_size=%d — retrying",
@@ -197,9 +201,25 @@ class AnthropicWrapper(LLMWrapper):
                 board_size,
             )
 
-            # Append the raw assistant message so the conversation is coherent
-            # for the next API call.
+            # Anthropic requires every tool_use to be followed immediately by a
+            # tool_result in the next user message — plain text retries cause a
+            # 400 error. Append assistant turn then a tool_result carrying the error.
             messages.append({"role": "assistant", "content": response.content})
+            messages.append({
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": tool_use_id,
+                        "content": (
+                            f"Invalid shot: {last_exc}. "
+                            f"You MUST call choose_shot again with a valid, unfired cell "
+                            f"(row and col each in 0–{board_size - 1}). "
+                            "Check the ALREADY FIRED list in the original message and avoid every cell listed there."
+                        ),
+                    }
+                ],
+            })
 
         raise ValueError(
             f"Failed to get valid shot after 3 attempts from model '{self._config.model}'. "
