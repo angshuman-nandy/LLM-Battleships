@@ -23,9 +23,8 @@ interface PlacementFormState {
 
 const PRESET_MODELS: Record<Provider, Array<{ value: string; label: string }>> = {
   anthropic: [
-    { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5  (fast · cheap)' },
+    { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fast · cheap)' },
     { value: 'claude-sonnet-4-6',          label: 'Claude Sonnet 4.6 (balanced)' },
-    { value: 'claude-opus-4-7',            label: 'Claude Opus 4    (powerful)' },
   ],
   openai: [
     { value: 'gpt-4o-mini', label: 'GPT-4o mini (fast · cheap)' },
@@ -36,8 +35,6 @@ const PRESET_MODELS: Record<Provider, Array<{ value: string; label: string }>> =
     { value: 'mistral-nemo', label: 'mistral-nemo' },
   ],
 }
-
-const CUSTOM_MODEL = '__custom__'
 
 const PROVIDER_LABELS: Record<Provider, string> = {
   anthropic: 'Anthropic',
@@ -88,43 +85,20 @@ function ModelSelector({
   disabled?: boolean
 }) {
   const presets = PRESET_MODELS[provider] ?? []
-  const isPreset = presets.some((p) => p.value === model)
-  const selectValue = isPreset ? model : CUSTOM_MODEL
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <select
-        value={selectValue}
-        disabled={disabled}
-        onChange={(e) => {
-          if (e.target.value === CUSTOM_MODEL) {
-            onChange('')
-          } else {
-            onChange(e.target.value)
-          }
-        }}
-        style={selectStyle}
-      >
-        {presets.map((p) => (
-          <option key={p.value} value={p.value}>
-            {p.label}
-          </option>
-        ))}
-        <option value={CUSTOM_MODEL}>Custom model…</option>
-      </select>
-
-      {selectValue === CUSTOM_MODEL && (
-        <input
-          type="text"
-          value={model}
-          disabled={disabled}
-          placeholder="Enter model name (e.g. llama3.2)"
-          onChange={(e) => onChange(e.target.value)}
-          style={{ ...inputStyle, marginTop: 0 }}
-          autoFocus
-        />
-      )}
-    </div>
+    <select
+      value={model}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+      style={selectStyle}
+    >
+      {presets.map((p) => (
+        <option key={p.value} value={p.value}>
+          {p.label}
+        </option>
+      ))}
+    </select>
   )
 }
 
