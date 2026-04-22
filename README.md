@@ -203,8 +203,8 @@ Port:       7860
 
 | Provider | Notes |
 |----------|-------|
-| Anthropic | claude-3-5-sonnet, claude-3-5-haiku, etc. |
-| OpenAI | gpt-4o, gpt-4o-mini, etc. |
+| Anthropic | claude-3-5-haiku |
+| OpenAI | gpt-4o-mini |
 | Ollama | Local models via `/v1/chat/completions` — must support tool use (e.g. `llama3.1`, `mistral-nemo`) |
 
 All LLM calls use **forced tool use** — structured JSON responses only, no free-text parsing.
