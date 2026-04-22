@@ -1,3 +1,12 @@
+---
+title: LLM Battleships
+emoji: 🚢
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # LLM Battleships
 
 A Battleship game where two LLM agents play each other — or you play against one — viewable live in a browser. Configure providers, board size, and ship placement strategy, then watch the AIs duel in real time.
