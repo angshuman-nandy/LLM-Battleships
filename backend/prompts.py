@@ -13,17 +13,29 @@ THIRD_AGENT_PLACEMENT_SYSTEM = (
 
 
 def placement_user_message(board_size: int, ships_to_place: list[tuple[str, int]]) -> str:
-    ship_lines = "\n".join(f"  - {t} (length {l})" for t, l in ships_to_place)
+    ship_lines = []
+    for name, length in ships_to_place:
+        max_row_h = board_size - 1        # horizontal: row can be 0..board_size-1
+        max_col_h = board_size - length   # horizontal: col must leave room for length
+        max_row_v = board_size - length   # vertical: row must leave room for length
+        max_col_v = board_size - 1        # vertical: col can be 0..board_size-1
+        ship_lines.append(
+            f"  - {name} (length {length}): "
+            f"H → row 0–{max_row_h}, col 0–{max_col_h}  |  "
+            f"V → row 0–{max_row_v}, col 0–{max_col_v}"
+        )
+    ships_block = "\n".join(ship_lines)
     return (
         f"You are placing ships on a {board_size}×{board_size} Battleship grid.\n\n"
         f"Grid coordinates are 0-indexed: rows 0–{board_size - 1}, "
         f"columns 0–{board_size - 1}.\n\n"
         "Orientation rules:\n"
-        "  - 'H' (horizontal): the ship extends rightward from (row, col).\n"
-        "  - 'V' (vertical):   the ship extends downward  from (row, col).\n\n"
-        f"Ships you must place (every one is required):\n{ship_lines}\n\n"
-        f"Constraints:\n"
-        f"  - All cells must be within [0, {board_size - 1}].\n"
+        "  - 'H' (horizontal): the ship occupies (row, col), (row, col+1), … (row, col+length-1).\n"
+        "  - 'V' (vertical):   the ship occupies (row, col), (row+1, col), … (row+length-1, col).\n\n"
+        "Ships you must place — VALID starting positions shown per orientation:\n"
+        f"{ships_block}\n\n"
+        "Constraints:\n"
+        f"  - Every cell of every ship must be within [0, {board_size - 1}].\n"
         "  - No two ships may overlap.\n\n"
         "Call the place_ships tool with your placement decisions now."
     )

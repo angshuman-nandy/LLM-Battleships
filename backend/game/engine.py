@@ -186,10 +186,18 @@ class GameEngine:
                 if attempt == 1:
                     system_prompt = base_system
                 else:
+                    # Build per-ship max-start hints so the LLM can't repeat the same bounds error.
+                    hints = "; ".join(
+                        f"{name}(len {length}): H col≤{game.board_size - length}, V row≤{game.board_size - length}"
+                        for name, length in fleet
+                    )
                     system_prompt = (
-                        f"{base_system}\n\nPREVIOUS ATTEMPT FAILED: {last_placement_error} "
-                        f"All ships must fit entirely within rows 0–{game.board_size - 1} "
-                        f"and cols 0–{game.board_size - 1}. No overlaps."
+                        f"{base_system}\n\n"
+                        f"PREVIOUS ATTEMPT FAILED (attempt {attempt - 1}/{max_placement_attempts}): "
+                        f"{last_placement_error}\n"
+                        f"Max valid starting positions on a {game.board_size}×{game.board_size} board: {hints}. "
+                        f"All cells must be within rows 0–{game.board_size - 1} and "
+                        f"cols 0–{game.board_size - 1}. No overlaps. Fix and retry."
                     )
 
                 result = await llm.place_ships(game.board_size, fleet, system_prompt)
@@ -205,10 +213,19 @@ class GameEngine:
                 )
 
             if ships is None:
-                raise ValueError(
-                    f"LLM failed to produce a valid placement for {role_value} after "
-                    f"{max_placement_attempts} attempts. Last error: {last_placement_error}"
+                logger.warning(
+                    "LLM failed valid placement for %s after %d attempts — using random. Last error: %s",
+                    role_value, max_placement_attempts, last_placement_error,
                 )
+                await enqueue_event(self._game_id, "error", {
+                    "message": (
+                        f"LLM could not place ships after {max_placement_attempts} attempts "
+                        f"({last_placement_error}). Using random placement instead."
+                    ),
+                    "player": role_value,
+                    "retrying": False,
+                })
+                ships = random_placement(game.board_size, fleet)
 
         else:
             raise ValueError(f"Unknown PlacementMode: {mode!r}")
