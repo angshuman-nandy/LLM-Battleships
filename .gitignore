@@ -13,6 +13,7 @@ env/
 # Environment
 .env
 .env.*
+!.env.example
 
 # Node / Frontend
 node_modules/
