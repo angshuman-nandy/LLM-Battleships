@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.*
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Claude
+.claude/settings.local.json
