@@ -150,7 +150,8 @@ class OpenAIWrapper(LLMWrapper):
         )
         enemy_desc = _build_board_description(enemy_board_view, "Enemy board (your view)")
         initial_user_content = shot_user_message(
-            board_size, own_desc, enemy_desc, format_move_history(move_history)
+            board_size, own_desc, enemy_desc, format_move_history(move_history),
+            enemy_board_view=enemy_board_view,
         )
 
         messages: list[dict] = [

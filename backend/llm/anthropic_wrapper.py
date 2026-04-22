@@ -126,7 +126,8 @@ class AnthropicWrapper(LLMWrapper):
         )
         enemy_desc = _build_board_description(enemy_board_view, "Enemy board (your view)")
         base_user_message = shot_user_message(
-            board_size, own_desc, enemy_desc, format_move_history(move_history)
+            board_size, own_desc, enemy_desc, format_move_history(move_history),
+            enemy_board_view=enemy_board_view,
         )
 
         messages: list[dict[str, Any]] = [
@@ -161,8 +162,19 @@ class AnthropicWrapper(LLMWrapper):
             col: int = int(tool_input["col"])
             reasoning: str | None = tool_input.get("reasoning")
 
-            # Validate the coordinate is within bounds.
-            if 0 <= row < board_size and 0 <= col < board_size:
+            # Validate bounds and that the cell hasn't already been fired at.
+            if not (0 <= row < board_size and 0 <= col < board_size):
+                last_exc = ValueError(
+                    f"row={row}, col={col} is out of bounds for a "
+                    f"{board_size}×{board_size} board"
+                )
+            elif enemy_board_view[row][col] != "empty":
+                cell_state = enemy_board_view[row][col]
+                last_exc = ValueError(
+                    f"({row}, {col}) has already been fired at (state: {cell_state!r}). "
+                    "Choose a cell that is still 'empty'."
+                )
+            else:
                 logger.debug(
                     "choose_shot: model=%s attempt=%d row=%d col=%d reasoning=%r",
                     self._config.model,
@@ -172,14 +184,6 @@ class AnthropicWrapper(LLMWrapper):
                     reasoning,
                 )
                 return ShotResult(row=row, col=col, reasoning=reasoning)
-
-            # Invalid coordinate — record the error and build the conversation
-            # context for the next retry.  We append both the assistant's
-            # (invalid) tool-use response and a new user correction message.
-            last_exc = ValueError(
-                f"row={row}, col={col} is out of bounds for a "
-                f"{board_size}×{board_size} board"
-            )
             logger.warning(
                 "choose_shot: invalid coordinate from model=%s attempt=%d "
                 "row=%d col=%d board_size=%d — retrying",

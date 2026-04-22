@@ -63,14 +63,29 @@ def shot_user_message(
     own_board_desc: str,
     enemy_board_desc: str,
     move_history_section: str,
+    enemy_board_view: list[list[str]] | None = None,
 ) -> str:
+    already_fired = ""
+    if enemy_board_view:
+        fired = [
+            f"({r},{c})"
+            for r, row in enumerate(enemy_board_view)
+            for c, cell in enumerate(row)
+            if cell != "empty"
+        ]
+        if fired:
+            already_fired = (
+                f"ALREADY FIRED (do NOT repeat these): {', '.join(fired)}\n\n"
+            )
+
     return (
         f"It is your turn in a {board_size}×{board_size} Battleship game.\n\n"
         f"{own_board_desc}\n\n"
         f"{enemy_board_desc}\n\n"
         f"{move_history_section}"
+        f"{already_fired}"
         f"Valid coordinates: row 0–{board_size - 1}, col 0–{board_size - 1}.\n"
-        "Choose a cell to fire at. Call the choose_shot tool now."
+        "Choose a cell that has NOT been fired at yet. Call the choose_shot tool now."
     )
 
 
