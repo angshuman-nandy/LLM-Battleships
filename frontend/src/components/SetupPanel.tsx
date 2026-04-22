@@ -21,11 +21,23 @@ interface PlacementFormState {
   agentEndpointUrl: string
 }
 
-const MODEL_PLACEHOLDERS: Record<Provider, string> = {
-  anthropic: 'claude-3-5-sonnet-20241022',
-  openai: 'gpt-4o',
-  ollama: 'llama3.1',
+const PRESET_MODELS: Record<Provider, Array<{ value: string; label: string }>> = {
+  anthropic: [
+    { value: 'claude-haiku-4-5-20251001',  label: 'Claude Haiku 4.5  (fast · cheap)' },
+    { value: 'claude-sonnet-4-6',           label: 'Claude Sonnet 4.6 (balanced)' },
+    { value: 'claude-3-5-sonnet-20241022',  label: 'Claude 3.5 Sonnet (reliable)' },
+  ],
+  openai: [
+    { value: 'gpt-4o-mini', label: 'GPT-4o mini (fast · cheap)' },
+    { value: 'gpt-4o',      label: 'GPT-4o (capable)' },
+  ],
+  ollama: [
+    { value: 'llama3.1',     label: 'llama3.1 (recommended)' },
+    { value: 'mistral-nemo', label: 'mistral-nemo' },
+  ],
 }
+
+const CUSTOM_MODEL = '__custom__'
 
 const PROVIDER_LABELS: Record<Provider, string> = {
   anthropic: 'Anthropic',
@@ -64,6 +76,58 @@ const selectStyle: React.CSSProperties = {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+function ModelSelector({
+  provider,
+  model,
+  onChange,
+  disabled,
+}: {
+  provider: Provider
+  model: string
+  onChange: (m: string) => void
+  disabled?: boolean
+}) {
+  const presets = PRESET_MODELS[provider] ?? []
+  const isPreset = presets.some((p) => p.value === model)
+  const selectValue = isPreset ? model : CUSTOM_MODEL
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <select
+        value={selectValue}
+        disabled={disabled}
+        onChange={(e) => {
+          if (e.target.value === CUSTOM_MODEL) {
+            onChange('')
+          } else {
+            onChange(e.target.value)
+          }
+        }}
+        style={selectStyle}
+      >
+        {presets.map((p) => (
+          <option key={p.value} value={p.value}>
+            {p.label}
+          </option>
+        ))}
+        <option value={CUSTOM_MODEL}>Custom model…</option>
+      </select>
+
+      {selectValue === CUSTOM_MODEL && (
+        <input
+          type="text"
+          value={model}
+          disabled={disabled}
+          placeholder="Enter model name (e.g. llama3.2)"
+          onChange={(e) => onChange(e.target.value)}
+          style={{ ...inputStyle, marginTop: 0 }}
+          autoFocus
+        />
+      )}
+    </div>
+  )
+}
+
 function LLMConfigForm({
   label,
   value,
@@ -98,9 +162,11 @@ function LLMConfigForm({
           <select
             value={value.provider}
             disabled={disabled}
-            onChange={(e) =>
-              onChange({ ...value, provider: e.target.value as Provider, model: '' })
-            }
+            onChange={(e) => {
+              const p = e.target.value as Provider
+              const defaultModel = PRESET_MODELS[p]?.[0]?.value ?? ''
+              onChange({ ...value, provider: p, model: defaultModel })
+            }}
             style={selectStyle}
           >
             {availableProviders.map((p) => (
@@ -113,14 +179,14 @@ function LLMConfigForm({
 
         <label style={{ fontSize: 13, color: '#ccc' }}>
           Model
-          <input
-            type="text"
-            value={value.model}
-            disabled={disabled}
-            placeholder={MODEL_PLACEHOLDERS[value.provider]}
-            onChange={(e) => onChange({ ...value, model: e.target.value })}
-            style={inputStyle}
-          />
+          <div style={{ marginTop: 4 }}>
+            <ModelSelector
+              provider={value.provider}
+              model={value.model}
+              onChange={(m) => onChange({ ...value, model: m })}
+              disabled={disabled}
+            />
+          </div>
         </label>
 
         {value.provider === 'ollama' && (
@@ -202,13 +268,11 @@ function PlacementForm({
             <select
               value={value.agentProvider}
               disabled={disabled}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  agentProvider: e.target.value as Provider,
-                  agentModel: '',
-                })
-              }
+              onChange={(e) => {
+                const p = e.target.value as Provider
+                const defaultModel = PRESET_MODELS[p]?.[0]?.value ?? ''
+                onChange({ ...value, agentProvider: p, agentModel: defaultModel })
+              }}
               style={selectStyle}
             >
               {availableProviders.map((p) => (
@@ -221,14 +285,14 @@ function PlacementForm({
 
           <label style={{ fontSize: 13, color: '#ccc', display: 'block', marginBottom: 6 }}>
             Model
-            <input
-              type="text"
-              value={value.agentModel}
-              disabled={disabled}
-              placeholder={MODEL_PLACEHOLDERS[value.agentProvider]}
-              onChange={(e) => onChange({ ...value, agentModel: e.target.value })}
-              style={inputStyle}
-            />
+            <div style={{ marginTop: 4 }}>
+              <ModelSelector
+                provider={value.agentProvider}
+                model={value.agentModel}
+                onChange={(m) => onChange({ ...value, agentModel: m })}
+                disabled={disabled}
+              />
+            </div>
           </label>
 
           {value.agentProvider === 'ollama' && (
@@ -282,12 +346,13 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
       setAvailableProviders(providers)
       if (cfg.ollama_endpoint_url) setOllamaEndpointUrl(cfg.ollama_endpoint_url)
 
-      // Default selectors to first available provider.
+      // Default selectors to first available provider + its first preset model.
       const first = providers[0] ?? 'ollama'
-      setP1LLM((prev) => ({ ...prev, provider: first }))
-      setP2LLM((prev) => ({ ...prev, provider: first }))
-      setP1Placement((prev) => ({ ...prev, agentProvider: first }))
-      setP2Placement((prev) => ({ ...prev, agentProvider: first }))
+      const firstModel = PRESET_MODELS[first]?.[0]?.value ?? ''
+      setP1LLM((prev) => ({ ...prev, provider: first, model: firstModel }))
+      setP2LLM((prev) => ({ ...prev, provider: first, model: firstModel }))
+      setP1Placement((prev) => ({ ...prev, agentProvider: first, agentModel: firstModel }))
+      setP2Placement((prev) => ({ ...prev, agentProvider: first, agentModel: firstModel }))
       setConfigLoaded(true)
     }).catch(() => {
       // Fall back to ollama-only if server unreachable.
@@ -296,9 +361,10 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
   }, [])
 
   function buildLLMPayload(form: LLMFormState): LLMConfigPayload {
+    const fallback = PRESET_MODELS[form.provider]?.[0]?.value ?? ''
     const payload: LLMConfigPayload = {
       provider: form.provider,
-      model: form.model || MODEL_PLACEHOLDERS[form.provider],
+      model: form.model || fallback,
     }
     if (form.provider === 'ollama') {
       payload.endpoint_url = form.endpointUrl || ollamaEndpointUrl
@@ -309,9 +375,10 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
   function buildPlacementPayload(form: PlacementFormState): PlacementConfigPayload {
     const payload: PlacementConfigPayload = { mode: form.mode }
     if (form.mode === 'third_agent') {
+      const agentFallback = PRESET_MODELS[form.agentProvider]?.[0]?.value ?? ''
       const agentPayload: LLMConfigPayload = {
         provider: form.agentProvider,
-        model: form.agentModel || MODEL_PLACEHOLDERS[form.agentProvider],
+        model: form.agentModel || agentFallback,
       }
       if (form.agentProvider === 'ollama') {
         agentPayload.endpoint_url = form.agentEndpointUrl || ollamaEndpointUrl
