@@ -17,7 +17,6 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 class Provider(str, Enum):
     anthropic = "anthropic"
     openai = "openai"
-    ollama = "ollama"
 
 
 class GameMode(str, Enum):

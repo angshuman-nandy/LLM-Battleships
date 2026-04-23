@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .api.routes_game import router as game_router
 from .api.routes_sse import router as sse_router
-from .config import ENV, DEFAULT_ANTHROPIC_API_KEY, DEFAULT_OPENAI_API_KEY, DEFAULT_OLLAMA_ENDPOINT
+from .config import ENV, DEFAULT_ANTHROPIC_API_KEY, DEFAULT_OPENAI_API_KEY
 
 app = FastAPI(title="LLM Battleships")
 
@@ -59,22 +59,16 @@ async def health() -> dict[str, str]:
 async def client_config() -> dict:
     """Return non-secret defaults the frontend can use to pre-fill the setup form.
 
-    available_providers lists only providers that have keys configured in env,
-    plus ollama (which needs no key). The frontend uses this to hide providers
-    that cannot be used.
+    available_providers lists only providers that have keys configured in env.
+    The frontend uses this to hide providers that cannot be used.
     """
-    available_providers: list[str] = ["ollama"]
+    available_providers: list[str] = []
     if DEFAULT_ANTHROPIC_API_KEY:
         available_providers.append("anthropic")
     if DEFAULT_OPENAI_API_KEY:
         available_providers.append("openai")
 
-    # Never return actual API keys — they stay server-side only.
-    # The frontend only needs to know which providers are usable.
-    return {
-        "ollama_endpoint_url": DEFAULT_OLLAMA_ENDPOINT,
-        "available_providers": available_providers,
-    }
+    return {"available_providers": available_providers}
 
 
 # ---------------------------------------------------------------------------

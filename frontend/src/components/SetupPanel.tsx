@@ -27,38 +27,26 @@ interface PlacementFormState {
 const PRESET_MODELS: Record<Provider, Array<{ value: string; label: string }>> = {
   anthropic: [
     { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (fast · cheap)' },
+    { value: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6 (balanced)' },
   ],
   openai: [
-    { value: 'gpt-4o-mini', label: 'GPT-4o mini (fast · cheap)' }
-  ],
-  ollama: [
-    { value: 'llama3.1',     label: 'llama3.1 (recommended)' },
-    { value: 'mistral-nemo', label: 'mistral-nemo' },
+    { value: 'gpt-4o-mini',  label: 'GPT-4o mini (fast · cheap)' },
+    { value: 'gpt-4.1-nano', label: 'GPT-4.1 nano (fastest · cheapest)' },
+    { value: 'gpt-4.1-mini', label: 'GPT-4.1 mini (balanced)' },
+    { value: 'gpt-4.1',      label: 'GPT-4.1 (flagship)' },
+    { value: 'gpt-4o',       label: 'GPT-4o (capable)' },
+    { value: 'o4-mini',      label: 'o4-mini (reasoning)' },
   ],
 }
 
 const PROVIDER_LABELS: Record<Provider, string> = {
   anthropic: 'Anthropic',
   openai: 'OpenAI',
-  ollama: 'Ollama (local)',
 }
 
 const BOARD_SIZES = [5, 7, 10]
 
 // ── Shared inline styles ──────────────────────────────────────────────────────
-
-const inputStyle: React.CSSProperties = {
-  display: 'block',
-  marginTop: 4,
-  width: '100%',
-  padding: '6px 8px',
-  backgroundColor: '#1a1a2e',
-  color: '#ddd',
-  border: '1px solid #444',
-  borderRadius: 4,
-  fontSize: 13,
-  boxSizing: 'border-box',
-}
 
 const selectStyle: React.CSSProperties = {
   display: 'block',
@@ -108,14 +96,12 @@ function LLMConfigForm({
   value,
   onChange,
   availableProviders,
-  ollamaEndpointUrl,
   disabled,
 }: {
   label: string
   value: LLMFormState
   onChange: (v: LLMFormState) => void
   availableProviders: Provider[]
-  ollamaEndpointUrl: string
   disabled?: boolean
 }) {
   return (
@@ -163,20 +149,6 @@ function LLMConfigForm({
             />
           </div>
         </label>
-
-        {value.provider === 'ollama' && (
-          <label style={{ fontSize: 13, color: '#ccc' }}>
-            Endpoint URL
-            <input
-              type="text"
-              value={value.endpointUrl || ollamaEndpointUrl}
-              disabled={disabled}
-              placeholder="http://localhost:11434/v1"
-              onChange={(e) => onChange({ ...value, endpointUrl: e.target.value })}
-              style={inputStyle}
-            />
-          </label>
-        )}
       </div>
     </fieldset>
   )
@@ -188,7 +160,6 @@ function PlacementForm({
   onChange,
   availableModes,
   availableProviders,
-  ollamaEndpointUrl,
   disabled,
 }: {
   label: string
@@ -196,7 +167,6 @@ function PlacementForm({
   onChange: (v: PlacementFormState) => void
   availableModes: PlacementMode[]
   availableProviders: Provider[]
-  ollamaEndpointUrl: string
   disabled?: boolean
 }) {
   return (
@@ -269,22 +239,6 @@ function PlacementForm({
               />
             </div>
           </label>
-
-          {value.agentProvider === 'ollama' && (
-            <label style={{ fontSize: 13, color: '#ccc', display: 'block' }}>
-              Endpoint URL
-              <input
-                type="text"
-                value={value.agentEndpointUrl || ollamaEndpointUrl}
-                disabled={disabled}
-                placeholder="http://localhost:11434/v1"
-                onChange={(e) =>
-                  onChange({ ...value, agentEndpointUrl: e.target.value })
-                }
-                style={inputStyle}
-              />
-            </label>
-          )}
         </div>
       )}
     </fieldset>
@@ -294,20 +248,19 @@ function PlacementForm({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
-  const [availableProviders, setAvailableProviders] = useState<Provider[]>(['ollama'])
-  const [ollamaEndpointUrl, setOllamaEndpointUrl] = useState('http://localhost:11434/v1')
+  const [availableProviders, setAvailableProviders] = useState<Provider[]>([])
   const [configLoaded, setConfigLoaded] = useState(false)
 
   const [mode, setMode] = useState<GameMode>('llm_vs_llm')
   const [boardSize, setBoardSize] = useState<number>(5)
 
-  const [p1LLM, setP1LLM] = useState<LLMFormState>({ provider: 'ollama', model: '', endpointUrl: '' })
+  const [p1LLM, setP1LLM] = useState<LLMFormState>({ provider: 'anthropic', model: '', endpointUrl: '' })
   const [p1Placement, setP1Placement] = useState<PlacementFormState>({
-    mode: 'llm', agentProvider: 'ollama', agentModel: '', agentEndpointUrl: '',
+    mode: 'llm', agentProvider: 'anthropic', agentModel: '', agentEndpointUrl: '',
   })
-  const [p2LLM, setP2LLM] = useState<LLMFormState>({ provider: 'ollama', model: '', endpointUrl: '' })
+  const [p2LLM, setP2LLM] = useState<LLMFormState>({ provider: 'anthropic', model: '', endpointUrl: '' })
   const [p2Placement, setP2Placement] = useState<PlacementFormState>({
-    mode: 'llm', agentProvider: 'ollama', agentModel: '', agentEndpointUrl: '',
+    mode: 'llm', agentProvider: 'anthropic', agentModel: '', agentEndpointUrl: '',
   })
 
   const [gameId, setGameId] = useState<string | null>(null)
@@ -319,10 +272,9 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
     api.getConfig().then((cfg) => {
       const providers = cfg.available_providers as Provider[]
       setAvailableProviders(providers)
-      if (cfg.ollama_endpoint_url) setOllamaEndpointUrl(cfg.ollama_endpoint_url)
 
       // Default selectors to first available provider + its first preset model.
-      const first = providers[0] ?? 'ollama'
+      const first = providers[0] ?? 'anthropic'
       const firstModel = PRESET_MODELS[first]?.[0]?.value ?? ''
       setP1LLM((prev) => ({ ...prev, provider: first, model: firstModel }))
       setP2LLM((prev) => ({ ...prev, provider: first, model: firstModel }))
@@ -330,35 +282,26 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
       setP2Placement((prev) => ({ ...prev, agentProvider: first, agentModel: firstModel }))
       setConfigLoaded(true)
     }).catch(() => {
-      // Fall back to ollama-only if server unreachable.
       setConfigLoaded(true)
     })
   }, [])
 
   function buildLLMPayload(form: LLMFormState): LLMConfigPayload {
     const fallback = PRESET_MODELS[form.provider]?.[0]?.value ?? ''
-    const payload: LLMConfigPayload = {
+    return {
       provider: form.provider,
       model: form.model || fallback,
     }
-    if (form.provider === 'ollama') {
-      payload.endpoint_url = form.endpointUrl || ollamaEndpointUrl
-    }
-    return payload
   }
 
   function buildPlacementPayload(form: PlacementFormState): PlacementConfigPayload {
     const payload: PlacementConfigPayload = { mode: form.mode }
     if (form.mode === 'third_agent') {
       const agentFallback = PRESET_MODELS[form.agentProvider]?.[0]?.value ?? ''
-      const agentPayload: LLMConfigPayload = {
+      payload.agent_config = {
         provider: form.agentProvider,
         model: form.agentModel || agentFallback,
       }
-      if (form.agentProvider === 'ollama') {
-        agentPayload.endpoint_url = form.agentEndpointUrl || ollamaEndpointUrl
-      }
-      payload.agent_config = agentPayload
     }
     return payload
   }
@@ -412,9 +355,6 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
 
   const formDisabled = !!gameId || loading
 
-  const showOllamaNote =
-    p1LLM.provider === 'ollama' || p2LLM.provider === 'ollama'
-
   if (!configLoaded) {
     return (
       <div style={{ color: '#888', padding: 24 }}>Loading server config…</div>
@@ -434,7 +374,7 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
     >
       <h2 style={{ color: '#ddd', marginTop: 0, marginBottom: 20 }}>New Game</h2>
 
-      {availableProviders.length === 1 && availableProviders[0] === 'ollama' && (
+      {availableProviders.length === 0 && (
         <div
           style={{
             padding: '10px 14px',
@@ -446,9 +386,8 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
             fontSize: 13,
           }}
         >
-          No Anthropic or OpenAI API keys detected — only Ollama (local) is available.
-          Set <code>ANTHROPIC_API_KEY</code> or <code>OPENAI_API_KEY</code> in your{' '}
-          <code>.env</code> to enable cloud providers.
+          No API keys detected. Set <code>ANTHROPIC_API_KEY</code> or{' '}
+          <code>OPENAI_API_KEY</code> in your <code>.env</code>.
         </div>
       )}
 
@@ -511,7 +450,6 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
             value={p1LLM}
             onChange={setP1LLM}
             availableProviders={availableProviders}
-            ollamaEndpointUrl={ollamaEndpointUrl}
             disabled={formDisabled}
           />
           <PlacementForm
@@ -520,7 +458,6 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
             onChange={setP1Placement}
             availableModes={p1PlacementModes}
             availableProviders={availableProviders}
-            ollamaEndpointUrl={ollamaEndpointUrl}
             disabled={formDisabled}
           />
         </>
@@ -546,7 +483,6 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
         value={p2LLM}
         onChange={setP2LLM}
         availableProviders={availableProviders}
-        ollamaEndpointUrl={ollamaEndpointUrl}
         disabled={formDisabled}
       />
       <PlacementForm
@@ -555,26 +491,8 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
         onChange={setP2Placement}
         availableModes={p2PlacementModes}
         availableProviders={availableProviders}
-        ollamaEndpointUrl={ollamaEndpointUrl}
         disabled={formDisabled}
       />
-
-      {/* Ollama note */}
-      {showOllamaNote && (
-        <div
-          style={{
-            fontSize: 12,
-            color: '#fa0',
-            marginBottom: 12,
-            padding: '8px 12px',
-            backgroundColor: '#2a2000',
-            borderRadius: 4,
-            border: '1px solid #664',
-          }}
-        >
-          Ollama requires a model with tool-call support (e.g. llama3.1, mistral-nemo).
-        </div>
-      )}
 
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>

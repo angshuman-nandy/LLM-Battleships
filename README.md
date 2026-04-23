@@ -57,7 +57,7 @@ Each player's ships can be placed by one of four strategies:
 | Backend | Python 3.11, FastAPI, uvicorn |
 | Frontend | React 18, TypeScript, Vite |
 | Real-time | Server-Sent Events (SSE) |
-| LLM providers | Anthropic SDK, OpenAI SDK, Ollama (OpenAI-compatible) |
+| LLM providers | Anthropic SDK, OpenAI SDK |
 | Data validation | Pydantic v2 |
 | Container | Docker multi-stage build |
 | Hosting | Hugging Face Spaces (port 7860) |
@@ -119,8 +119,6 @@ Browser (React + TypeScript)
 │           │     wrapper.py    │
 │           │   ─ openai_       │
 │           │     wrapper.py    │
-│           │   ─ ollama_       │
-│           │     wrapper.py    │
 │           │   ─ factory.py    │
 │           └───────────────────┘
 └─────────────────────────────────────────────────────────────┘
@@ -169,7 +167,6 @@ ENV=development
 
 ANTHROPIC_API_KEY=sk-ant-...
 OPENAI_API_KEY=sk-...
-OLLAMA_ENDPOINT_URL=http://localhost:11434/v1
 ```
 
 Keys set here pre-fill the setup form in the browser. Leave blank to enter them manually in the UI. API keys are **never** logged or stored server-side.
@@ -205,7 +202,6 @@ Port:       7860
 |----------|-------|
 | Anthropic | claude-3-5-haiku |
 | OpenAI | gpt-4o-mini |
-| Ollama | Local models via `/v1/chat/completions` — must support tool use (e.g. `llama3.1`, `mistral-nemo`) |
 
 All LLM calls use **forced tool use** — structured JSON responses only, no free-text parsing.
 

@@ -37,8 +37,4 @@ class LLMWrapperFactory:
             from .openai_wrapper import OpenAIWrapper
             return OpenAIWrapper(config)
 
-        if config.provider == Provider.ollama:
-            from .ollama_wrapper import OllamaWrapper
-            return OllamaWrapper(config)
-
         raise ValueError(f"Unknown provider: {config.provider!r}")

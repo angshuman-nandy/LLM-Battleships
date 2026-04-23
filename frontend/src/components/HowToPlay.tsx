@@ -139,21 +139,8 @@ export function HowToPlay() {
               an <code>OPENAI_API_KEY</code> in the server's <code>.env</code>.
             </span>
           </div>
-          <div style={row}>
-            <span style={rowLabel}>
-              <span style={badge('#fb923c')}>Ollama (local)</span>
-            </span>
-            <span style={rowDesc}>
-              Runs a model locally via{' '}
-              <a href="https://ollama.com" target="_blank" rel="noreferrer">Ollama</a>.
-              No API key needed, but the model <strong>must support tool calls</strong> —
-              e.g. <code>llama3.1</code>, <code>mistral-nemo</code>. Provide the endpoint URL
-              (default: <code>http://localhost:11434/v1</code>).
-            </span>
-          </div>
           <p style={{ ...body, marginTop: 4, color: '#888', fontSize: 12 }}>
             Only providers whose API keys are set in the server environment appear in the dropdowns.
-            Ollama is always shown.
           </p>
         </div>
 

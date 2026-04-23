@@ -11,7 +11,7 @@ A Battleship game where two LLM agents play each other (or a human plays an LLM)
 | Backend | Python 3.11, FastAPI, uvicorn |
 | Frontend | React 18 + TypeScript, Vite (served as static by FastAPI) |
 | Container | Docker multi-stage build, port 7860 |
-| LLM providers | Anthropic, OpenAI, Ollama |
+| LLM providers | Anthropic, OpenAI |
 | Real-time | Server-Sent Events (SSE) |
 | State | In-memory only — no database |
 
@@ -35,7 +35,6 @@ LLM-battleships/
 │   │   ├── base.py             # Abstract LLMWrapper + shared tool schemas
 │   │   ├── anthropic_wrapper.py
 │   │   ├── openai_wrapper.py
-│   │   ├── ollama_wrapper.py
 │   │   └── factory.py
 │   └── api/
 │       ├── routes_game.py      # /api/game/* endpoints
@@ -83,7 +82,6 @@ LLM-battleships/
 - `POST /start` uses `asyncio.create_task` — never awaited inline
 - LLM shot retries feed the error back into the conversation; never silently randomize
 - LLM placement falls back to random after 3 failed attempts (emits error SSE)
-- Ollama requires a tool-capable model (e.g. `llama3.1`, `mistral-nemo`)
 - Fleet by board size: 5×5 → 2 ships, 7×7 → 3 ships, 10×10 → 5 ships
 
 ---

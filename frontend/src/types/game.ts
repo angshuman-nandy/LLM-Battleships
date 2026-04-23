@@ -4,7 +4,7 @@
 // TypeScript mirrors of the backend Pydantic models.
 // Use string literal union types throughout — no enums.
 
-export type Provider = 'anthropic' | 'openai' | 'ollama'
+export type Provider = 'anthropic' | 'openai'
 export type GameMode = 'llm_vs_llm' | 'human_vs_llm'
 export type PlacementMode = 'llm' | 'third_agent' | 'human' | 'random'
 export type GamePhase = 'setup' | 'placement' | 'in_progress' | 'finished'

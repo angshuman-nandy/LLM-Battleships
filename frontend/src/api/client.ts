@@ -133,10 +133,9 @@ export const api = {
   /**
    * GET /api/config
    * Returns server-side defaults (from .env) to pre-fill the setup form.
-   * available_providers lists providers with configured keys (+ ollama always).
+   * available_providers lists providers with configured keys.
    */
   getConfig: (): Promise<{
-    ollama_endpoint_url: string
     available_providers: string[]
   }> => get('/config'),
 }
