@@ -22,7 +22,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from ..config import get_fleet
 from ..game.board import all_ships_sunk, apply_placement, apply_shot, validate_placement
@@ -55,6 +55,7 @@ from ..game.session_store import (
     set_task,
 )
 from .deps import get_game_or_404
+from ..notifications import notify_game_started
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ async def create_game(request: CreateGameRequest) -> dict[str, str]:
 
 
 @router.post("/{game_id}/start")
-async def start_game(game_id: str) -> dict[str, str]:
+async def start_game(game_id: str, request: Request) -> dict[str, str]:
     """Transition the game from *setup* to *placement* and launch the engine task.
 
     The engine runs as a background ``asyncio.Task`` so this endpoint returns
@@ -146,6 +147,11 @@ async def start_game(game_id: str) -> dict[str, str]:
     engine = GameEngine(game_id)
     task = asyncio.create_task(engine.start_game(), name=f"game-{game_id}")
     set_task(game_id, task)
+
+    # Resolve visitor IP — check X-Forwarded-For first (proxies / HF Spaces).
+    forwarded_for = request.headers.get("x-forwarded-for")
+    ip = forwarded_for.split(",")[0].strip() if forwarded_for else (request.client.host if request.client else "unknown")
+    asyncio.create_task(notify_game_started(ip, game))
 
     logger.info("Started game %s", game_id)
     return {"status": "started", "game_id": game_id}

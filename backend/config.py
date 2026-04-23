@@ -28,3 +28,6 @@ ENV: str = os.getenv("ENV", "production")
 # Set these in .env for local dev so you don't re-enter keys every session.
 DEFAULT_ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
 DEFAULT_OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
+PUSHOVER_TOKEN: str = os.getenv("PUSHOVER_TOKEN", "")
+PUSHOVER_USER: str = os.getenv("PUSHOVER_USER", "")
