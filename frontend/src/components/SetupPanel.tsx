@@ -299,7 +299,7 @@ export function SetupPanel({ onGameCreated, onGameStarted }: SetupPanelProps) {
   const [configLoaded, setConfigLoaded] = useState(false)
 
   const [mode, setMode] = useState<GameMode>('llm_vs_llm')
-  const [boardSize, setBoardSize] = useState<number>(10)
+  const [boardSize, setBoardSize] = useState<number>(5)
 
   const [p1LLM, setP1LLM] = useState<LLMFormState>({ provider: 'ollama', model: '', endpointUrl: '' })
   const [p1Placement, setP1Placement] = useState<PlacementFormState>({
