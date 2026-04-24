@@ -65,12 +65,42 @@ def shot_system_for_player(player_role: str) -> str:
     )
 
 
+def format_fleet_status(
+    fleet: list[tuple[str, int]],
+    move_history,
+    player_role: str,
+) -> str:
+    sunk_names = {
+        m.ship_sunk
+        for m in move_history
+        if (m.player if isinstance(m.player, str) else m.player.value) == player_role
+        and m.ship_sunk
+    }
+
+    lines = ["Fleet status (enemy ships):"]
+    for name, length in fleet:
+        status = "SUNK" if name in sunk_names else "still afloat"
+        lines.append(f"  {'✓' if name in sunk_names else '○'} {name} (size {length}) — {status}")
+
+    remaining = [(n, l) for n, l in fleet if n not in sunk_names]
+    if remaining:
+        sizes = ", ".join(f"{n}(size {l})" for n, l in remaining)
+        lines.append(f"Ships still to sink: {sizes}")
+    else:
+        lines.append("All enemy ships have been sunk!")
+
+    return "\n".join(lines) + "\n\n"
+
+
 def shot_user_message(
     board_size: int,
     own_board_desc: str,
     enemy_board_desc: str,
     move_history_section: str,
     enemy_board_view: list[list[str]] | None = None,
+    fleet: list[tuple[str, int]] | None = None,
+    move_history=None,
+    player_role: str | None = None,
 ) -> str:
     already_fired = ""
     if enemy_board_view:
@@ -85,12 +115,64 @@ def shot_user_message(
                 f"ALREADY FIRED (do NOT repeat these): {', '.join(fired)}\n\n"
             )
 
+    unsunk_hits = ""
+    if enemy_board_view:
+        count = sum(
+            1
+            for row in enemy_board_view
+            for cell in row
+            if cell == "hit"
+        )
+        if count:
+            unsunk_hits = (
+                f"NOTE: {count} hit cell(s) on the enemy board belong to a ship not yet fully sunk — "
+                "prioritise finishing that ship before searching elsewhere.\n\n"
+            )
+
+    fleet_section = ""
+    sunk_names: set[str] = set()
+    if fleet and move_history is not None and player_role is not None:
+        fleet_section = format_fleet_status(fleet, move_history, player_role)
+        sunk_names = {
+            m.ship_sunk
+            for m in move_history
+            if (m.player if isinstance(m.player, str) else m.player.value) == player_role
+            and m.ship_sunk
+        }
+
+    miss_strategy = ""
+    if fleet and move_history is not None and player_role is not None:
+        my_moves = [
+            m for m in move_history
+            if (m.player if isinstance(m.player, str) else m.player.value) == player_role
+        ]
+        last_was_miss = (
+            my_moves
+            and (my_moves[-1].result if isinstance(my_moves[-1].result, str) else my_moves[-1].result.value) == "miss"
+        )
+        if last_was_miss:
+            remaining = [(n, l) for n, l in fleet if n not in sunk_names]
+            if remaining:
+                min_size = min(l for _, l in remaining)
+                spacing = min_size - 1
+                miss_strategy = (
+                    f"SEARCH STRATEGY: Your last shot was a miss and no hit is currently in progress. "
+                    f"The smallest remaining ship has size {min_size}, so it must span at least {min_size} consecutive cells. "
+                    f"To cover the board efficiently, fire at cells spaced {spacing} apart "
+                    f"(i.e. skip {spacing - 1} cell(s) between shots) in any direction — "
+                    f"this guarantees every possible ship position contains at least one of your search shots. "
+                    f"NEVER fire at a cell you have already fired at.\n\n"
+                )
+
     return (
         f"It is your turn in a {board_size}×{board_size} Battleship game.\n\n"
+        f"{fleet_section}"
         f"{own_board_desc}\n\n"
         f"{enemy_board_desc}\n\n"
         f"{move_history_section}"
         f"{already_fired}"
+        f"{unsunk_hits}"
+        f"{miss_strategy}"
         f"Valid coordinates: row 0–{board_size - 1}, col 0–{board_size - 1}.\n"
         "Choose a cell that has NOT been fired at yet. Call the choose_shot tool now."
     )

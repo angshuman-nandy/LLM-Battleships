@@ -113,6 +113,8 @@ class AnthropicWrapper(LLMWrapper):
         enemy_board_view: list[list[str]],
         move_history: list[Move],
         system_prompt: str,
+        fleet: list[tuple[str, int]] | None = None,
+        player_role: str | None = None,
     ) -> ShotResult:
         """Ask the model to fire at a cell on the enemy board.
 
@@ -130,6 +132,9 @@ class AnthropicWrapper(LLMWrapper):
         base_user_message = shot_user_message(
             board_size, own_desc, enemy_desc, format_move_history(move_history),
             enemy_board_view=enemy_board_view,
+            fleet=fleet,
+            move_history=move_history,
+            player_role=player_role,
         )
 
         messages: list[dict[str, Any]] = [

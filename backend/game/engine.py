@@ -327,6 +327,8 @@ class GameEngine:
                     enemy_board_view,
                     game.moves,
                     system_prompt,
+                    fleet=fleet,
+                    player_role=role_value,
                 )
             except asyncio.CancelledError:
                 raise

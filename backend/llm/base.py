@@ -78,6 +78,8 @@ class LLMWrapper(ABC):
         enemy_board_view: list[list[str]],  # grid of CellState values (attacker's view)
         move_history: list[Move],
         system_prompt: str,
+        fleet: list[tuple[str, int]] | None = None,
+        player_role: str | None = None,
     ) -> ShotResult:
         """Ask the LLM to pick a cell to fire at.
 

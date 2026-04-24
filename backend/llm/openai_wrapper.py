@@ -122,6 +122,8 @@ class OpenAIWrapper(LLMWrapper):
         enemy_board_view: list[list[str]],
         move_history: list[Move],
         system_prompt: str,
+        fleet: list[tuple[str, int]] | None = None,
+        player_role: str | None = None,
     ) -> ShotResult:
         """Ask the model to pick a cell to fire at, with up to 3 retries.
 
@@ -155,6 +157,9 @@ class OpenAIWrapper(LLMWrapper):
         initial_user_content = shot_user_message(
             board_size, own_desc, enemy_desc, format_move_history(move_history),
             enemy_board_view=enemy_board_view,
+            fleet=fleet,
+            move_history=move_history,
+            player_role=player_role,
         )
 
         messages: list[dict] = [
