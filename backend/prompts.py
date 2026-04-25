@@ -50,9 +50,8 @@ SHOT_SYSTEM = (
     "You are playing Battleship. CRITICAL RULE: never fire at a cell you have already "
     "fired at — always check the ALREADY FIRED list in the prompt and the enemy board "
     "view before choosing a cell. Fire strategically: track hit patterns to find "
-    "ship orientations, eliminate impossible positions, prioritise finishing "
-    "damaged ships before searching new areas, and when searching always target "
-    "areas where the largest remaining ship can still fit."
+    "ship orientations, eliminate impossible positions, and prioritise finishing "
+    "damaged ships before searching new areas."
 )
 
 
@@ -62,8 +61,7 @@ def shot_system_for_player(player_role: str) -> str:
         "CRITICAL RULE: never fire at a cell you have already fired at — always check the "
         "ALREADY FIRED list in the prompt and the enemy board view before choosing a cell. "
         "Fire strategically: follow up on hits to sink ships quickly, "
-        "use checkerboard patterns to find new ships, and always prioritise targeting "
-        "areas where the largest remaining enemy ship can still fit."
+        "use checkerboard patterns to find new ships."
     )
 
 
@@ -142,21 +140,6 @@ def shot_user_message(
             and m.ship_sunk
         }
 
-    largest_ship_hint = ""
-    active_hits = enemy_board_view and any(
-        cell == "hit" for row in enemy_board_view for cell in row
-    )
-    if not active_hits and fleet and move_history is not None and player_role is not None:
-        remaining = [(n, l) for n, l in fleet if n not in sunk_names]
-        if remaining:
-            largest_name, largest_size = max(remaining, key=lambda x: x[1])
-            largest_ship_hint = (
-                f"LARGEST REMAINING SHIP: The {largest_name} (size {largest_size}) has not been sunk yet. "
-                f"When deciding where to search, always consider which unfired rows and columns "
-                f"still have room for {largest_size} consecutive cells — that is where it could be hiding. "
-                f"Targeting those areas first maximises your expected hits.\n\n"
-            )
-
     miss_strategy = ""
     if fleet and move_history is not None and player_role is not None:
         my_moves = [
@@ -189,7 +172,6 @@ def shot_user_message(
         f"{move_history_section}"
         f"{already_fired}"
         f"{unsunk_hits}"
-        f"{largest_ship_hint}"
         f"{miss_strategy}"
         f"Valid coordinates: row 0–{board_size - 1}, col 0–{board_size - 1}.\n"
         "Choose a cell that has NOT been fired at yet. Call the choose_shot tool now."
