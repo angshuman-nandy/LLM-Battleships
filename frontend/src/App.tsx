@@ -8,7 +8,7 @@ import { MoveLog } from './components/MoveLog'
 import { StatusBar } from './components/StatusBar'
 import { ShipPlacementBoard } from './components/ShipPlacementBoard'
 import { HowToPlay } from './components/HowToPlay'
-import { useSSE } from './hooks/useSSE'
+import { useWebSocket } from './hooks/useWebSocket'
 import { useGameState } from './hooks/useGameState'
 import { api } from './api/client'
 import type { PlayerRole, PlacedShip } from './types/game'
@@ -86,7 +86,7 @@ export default function App() {
   }, [])
 
   // Connect SSE only once the game has started.
-  useSSE({
+  useWebSocket({
     gameId: gameStarted ? gameId : null,
     onEvent: onSSEEvent,
     onError: onSSEError,

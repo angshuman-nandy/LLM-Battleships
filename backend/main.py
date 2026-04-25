@@ -19,7 +19,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .api.routes_game import router as game_router
-from .api.routes_sse import router as sse_router
+from .api.routes_ws import router as ws_router
 from .config import ENV, DEFAULT_ANTHROPIC_API_KEY, DEFAULT_OPENAI_API_KEY
 
 app = FastAPI(title="LLM Battleships")
@@ -31,7 +31,7 @@ app = FastAPI(title="LLM Battleships")
 if ENV == "development":
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
+        allow_origin_regex=r"http://localhost:\d+",
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -41,7 +41,7 @@ if ENV == "development":
 # ---------------------------------------------------------------------------
 
 app.include_router(game_router)
-app.include_router(sse_router)
+app.include_router(ws_router)
 
 
 # ---------------------------------------------------------------------------
