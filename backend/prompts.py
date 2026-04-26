@@ -50,8 +50,9 @@ SHOT_SYSTEM = (
     "You are playing Battleship. CRITICAL RULE: never fire at a cell you have already "
     "fired at — always check the ALREADY FIRED list in the prompt and the enemy board "
     "view before choosing a cell. Fire strategically: track hit patterns to find "
-    "ship orientations, eliminate impossible positions, and prioritise finishing "
-    "damaged ships before searching new areas."
+    "ship orientations, eliminate impossible positions, prioritise finishing "
+    "damaged ships before searching new areas, and always consider searching "
+    "for the largest remaining ship first."
 )
 
 
@@ -61,7 +62,8 @@ def shot_system_for_player(player_role: str) -> str:
         "CRITICAL RULE: never fire at a cell you have already fired at — always check the "
         "ALREADY FIRED list in the prompt and the enemy board view before choosing a cell. "
         "Fire strategically: follow up on hits to sink ships quickly, "
-        "use checkerboard patterns to find new ships."
+        "use checkerboard patterns to find new ships, and always consider "
+        "searching for the largest remaining ship first."
     )
 
 
@@ -140,6 +142,18 @@ def shot_user_message(
             and m.ship_sunk
         }
 
+    largest_ship_hint = ""
+    if fleet and move_history is not None and player_role is not None:
+        remaining = [(n, l) for n, l in fleet if n not in sunk_names]
+        if remaining:
+            largest_name, largest_size = max(remaining, key=lambda x: x[1])
+            largest_ship_hint = (
+                f"LARGEST REMAINING SHIP: {largest_name} (size {largest_size}). "
+                f"Always consider where this ship could fit — it needs {largest_size} consecutive "
+                f"unfired cells in a row or column. Prioritise areas with enough space to contain it "
+                f"and look for gaps of at least {largest_size} cells between fired shots.\n\n"
+            )
+
     miss_strategy = ""
     if fleet and move_history is not None and player_role is not None:
         my_moves = [
@@ -172,6 +186,7 @@ def shot_user_message(
         f"{move_history_section}"
         f"{already_fired}"
         f"{unsunk_hits}"
+        f"{largest_ship_hint}"
         f"{miss_strategy}"
         f"Valid coordinates: row 0–{board_size - 1}, col 0–{board_size - 1}.\n"
         "Choose a cell that has NOT been fired at yet. Call the choose_shot tool now."

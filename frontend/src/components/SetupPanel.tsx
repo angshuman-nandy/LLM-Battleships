@@ -36,6 +36,7 @@ const PRESET_MODELS: Record<Provider, Array<{ value: string; label: string }>> =
     { value: 'gpt-4.1',      label: 'GPT-4.1 (flagship)' },
     { value: 'gpt-4o',       label: 'GPT-4o (capable)' },
     { value: 'o4-mini',      label: 'o4-mini (reasoning)' },
+    { value: 'gpt-5.5',      label: 'GPT-5.5 (latest)' },
   ],
 }
 
